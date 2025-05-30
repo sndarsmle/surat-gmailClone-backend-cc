@@ -1,0 +1,27 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// prisma/pg_schema.prisma
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/pg_client" // Output client ke direktori spesifik
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_DATABASE_URL")
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  userId    String? // ID User yang melakukan aksi, bisa null jika aksi sistem
+  action    String // Deskripsi aksi, mis: "USER_LOGIN", "CREATE_SURAT", "READ_SURAT"
+  entity    String? // Entitas yang terlibat, mis: "User", "Surat"
+  entityId  String? // ID dari entitas yang terlibat
+  details   Json? // Detail tambahan jika diperlukan (mis: perubahan data)
+  ipAddress String?
+  createdAt DateTime @default(now())
+}

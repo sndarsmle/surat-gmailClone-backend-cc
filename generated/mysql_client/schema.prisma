@@ -1,0 +1,47 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// prisma/mysql_schema.prisma
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/mysql_client" // Output client ke direktori spesifik
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("MYSQL_DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  nama      String
+  password  String
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  suratDikirim  Surat[] @relation("PengirimSurat")
+  suratDiterima Surat[] @relation("PenerimaSurat")
+}
+
+model Surat {
+  id             String  @id @default(uuid())
+  subject        String
+  isi            String? @db.Text // Menggunakan TEXT untuk isi yang mungkin panjang
+  kategori_surat String // "resmi" | "tidak resmi"
+  status_baca    String  @default("belum dibaca") // "dibaca" | "belum dibaca"
+  pdf_file_path  String? // Path ke file PDF jika kategori "resmi"
+
+  pengirimId String
+  pengirim   User   @relation("PengirimSurat", fields: [pengirimId], references: [id], onDelete: Cascade)
+
+  penerimaId String
+  penerima   User   @relation("PenerimaSurat", fields: [penerimaId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([pengirimId])
+  @@index([penerimaId])
+}
