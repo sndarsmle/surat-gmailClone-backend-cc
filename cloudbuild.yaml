@@ -43,11 +43,11 @@ steps:
 availableSecrets:
   secretManager:
     # Secret ini dibuat di proyek Anda (A-08), jadi ID proyek di sini harus ID proyek Anda.
-    - versionName: projects/[YOUR_A-08_PROJECT_ID]/secrets/MYSQL_DATABASE_URL_SECRET/versions/latest
+    - versionName: projects/a-08-450504/secrets/MYSQL_DATABASE_URL_SECRET/versions/latest
       env: 'MYSQL_DATABASE_URL'
-    - versionName: projects/[YOUR_A-08_PROJECT_ID]/secrets/POSTGRES_DATABASE_URL_SECRET/versions/latest
+    - versionName: projects/a-08-450504/secrets/POSTGRES_DATABASE_URL_SECRET/versions/latest
       env: 'POSTGRES_DATABASE_URL'
-    - versionName: projects/[YOUR_A-08_PROJECT_ID]/secrets/JWT_SECRET_KEY/versions/latest
+    - versionName: projects/a-08-450504/secrets/JWT_SECRET_KEY/versions/latest
       env: 'JWT_SECRET'
-    - versionName: projects/[YOUR_A-08_PROJECT_ID]/secrets/GCP_PRIVATE_KEY_SECRET/versions/latest
+    - versionName: projects/a-08-450504/secrets/GCP_PRIVATE_KEY_SECRET/versions/latest
       env: 'GCP_PRIVATE_KEY'
