@@ -1,62 +1,53 @@
 # cloudbuild.yaml
 steps:
   # Step 1: Build the Docker image
-  # Menggunakan Docker builder untuk membangun image container.
-  # Image akan dinamai dengan project ID Anda, nama repositori Artifact Registry (cloud-run-source-deploy),
-  # nama aplikasi (surat-backend-app), dan tag commit SHA unik.
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-backend-app:$COMMIT_SHA' # DISINI SUDAH DISESUAIKAN DENGAN us-central1
-      - '.' # Menunjukkan Dockerfile berada di direktori saat ini (root repositori)
-    id: 'Build Docker Image' # ID langkah untuk memudahkan pelacakan
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-backend-app:$COMMIT_SHA'
+      - '.'
+    id: 'Build Docker Image'
 
   # Step 2: Push the Docker image to Artifact Registry
-  # Mendorong image Docker yang sudah dibangun ke Artifact Registry.
-  # Ini menyimpan image agar bisa digunakan oleh Cloud Run.
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-backend-app:$COMMIT_SHA' # DISINI JUGA SUDAH DISESUAIKAN DENGAN us-central1
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-backend-app:$COMMIT_SHA'
     id: 'Push Docker Image'
 
   # Step 3: Deploy to Cloud Run
-  # Menggunakan Google Cloud SDK builder untuk mendeploy image ke Cloud Run.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'gcloud'
     args:
       - 'run'
       - 'deploy'
-      - 'surat-backend-app' # Nama layanan Cloud Run Anda. Pastikan ini unik dalam proyek Anda.
+      - 'surat-backend-app'
       - '--image'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-backend-app:$COMMIT_SHA'
       - '--platform'
-      - 'managed' # Menggunakan Cloud Run yang dikelola sepenuhnya
+      - 'managed'
       - '--region'
-      - 'us-central1' # REGION CLOUD RUN DISET DI SINI (us-central1)
-      - '--allow-unauthenticated' # Mengizinkan akses publik ke layanan. Hapus flag ini jika Anda ingin layanan memerlukan otentikasi.
-      - '--set-env-vars' # Mengatur variabel lingkungan langsung (untuk yang tidak sensitif)
-      - | # Menggunakan YAML multi-line string
+      - 'us-central1'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - |
         NODE_ENV=production,
         PORT=3000,
-        GCS_BUCKET_NAME=c-01-450604, # Ganti dengan nama bucket GCS Anda
-        GCP_PROJECT_ID=c-01-450604,  # Ganti dengan ID proyek GCP Anda
-        GCP_CLIENT_EMAIL=storage-uploader-service@c-01-450604.iam.gserviceaccount.com # Ganti dengan client email service account Anda
-    # Menggunakan Secret Manager untuk variabel lingkungan sensitif
-    # Nilai dari secret ini akan otomatis diinject ke aplikasi pada saat runtime Cloud Run.
+        GCS_BUCKET_NAME=c-01-450604, # INI TETAP KE PROYEK TEMAN ANDA
+        GCP_PROJECT_ID=c-01-450604,  # INI TETAP KE PROYEK TEMAN ANDA
+        GCP_CLIENT_EMAIL=storage-uploader-service@c-01-450604.iam.gserviceaccount.com # INI TETAP KE PROYEK TEMAN ANDA
     secretEnv: ['MYSQL_DATABASE_URL', 'POSTGRES_DATABASE_URL', 'JWT_SECRET', 'GCP_PRIVATE_KEY']
     id: 'Deploy to Cloud Run'
 
-# Bagian ini mendefinisikan secret yang tersedia dari Secret Manager
-# Cloud Build akan mengambil nilai-nilai ini dan menyediakannya ke langkah-langkah build yang membutuhkannya (melalui secretEnv).
 availableSecrets:
   secretManager:
-    - versionName: projects/c-01-450604/secrets/MYSQL_DATABASE_URL_SECRET/versions/latest
+    # Secret ini dibuat di proyek Anda (A-08), jadi ID proyek di sini harus ID proyek Anda.
+    - versionName: projects/[YOUR_A-08_PROJECT_ID]/secrets/MYSQL_DATABASE_URL_SECRET/versions/latest
       env: 'MYSQL_DATABASE_URL'
-    - versionName: projects/c-01-450604/secrets/POSTGRES_DATABASE_URL_SECRET/versions/latest
+    - versionName: projects/[YOUR_A-08_PROJECT_ID]/secrets/POSTGRES_DATABASE_URL_SECRET/versions/latest
       env: 'POSTGRES_DATABASE_URL'
-    - versionName: projects/c-01-450604/secrets/JWT_SECRET_KEY/versions/latest
+    - versionName: projects/[YOUR_A-08_PROJECT_ID]/secrets/JWT_SECRET_KEY/versions/latest
       env: 'JWT_SECRET'
-    - versionName: projects/c-01-450604/secrets/GCP_PRIVATE_KEY_SECRET/versions/latest
+    - versionName: projects/[YOUR_A-08_PROJECT_ID]/secrets/GCP_PRIVATE_KEY_SECRET/versions/latest
       env: 'GCP_PRIVATE_KEY'
