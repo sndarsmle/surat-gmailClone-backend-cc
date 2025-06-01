@@ -16,6 +16,12 @@ RUN npm ci
 # Copy the rest of the application code to the working directory
 COPY . .
 
+# --- TAMBAHAN UNTUK DEBUGGING ---
+# Baris ini akan mencetak isi dari direktori /app di dalam container.
+# Cari output dari perintah ini di log Cloud Build Anda.
+RUN ls -la /app
+# --- AKHIR TAMBAHAN UNTUK DEBUGGING ---
+
 # Generate Prisma clients for both databases
 # This is crucial for your application to interact with your databases.
 # It assumes your Prisma schema files are correctly located.
