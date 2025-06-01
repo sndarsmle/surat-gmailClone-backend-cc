@@ -34,4 +34,4 @@ EXPOSE 3000
 
 # Command to start the application when the container launches
 # This uses the "start" script defined in your package.json.
-CMD ["npm", "start"]
+CMD npm start
