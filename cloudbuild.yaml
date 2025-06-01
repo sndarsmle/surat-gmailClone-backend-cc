@@ -4,15 +4,30 @@ options:
   logging: CLOUD_LOGGING_ONLY # Ini akan mengirim log build langsung ke Cloud Logging
 
 steps:
+  # Langkah 0 (BARU): Buat Repositori Artifact Registry jika belum ada
+  # Ini akan dijalankan sebelum push image
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        gcloud artifacts repositories describe us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy --project=$PROJECT_ID --location=us-central1 || \
+        gcloud artifacts repositories create cloud-run-source-deploy \
+          --repository-format=docker \
+          --location=us-central1 \
+          --description="Docker repository for Cloud Run source deployments" \
+          --project=$PROJECT_ID
+    id: 'Create Artifact Registry Repository'
+    # Perhatikan: $PROJECT_ID di sini akan otomatis diganti dengan ID proyek Anda
+
   # Step 1: Build the Docker image
-  # Menggunakan Artifact Registry dan nama aplikasi yang baru
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-backend-app:$COMMIT_SHA'
       - '.'
-    dir: "." # Dari YAML lama Anda, menunjukkan Dockerfile ada di root
+    dir: "."
     id: 'Build Docker Image'
 
   # Step 2: Push the Docker image to Artifact Registry
@@ -24,32 +39,30 @@ steps:
 
   # Step 3: Deploy to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    entrypoint: gcloud # entrypoint dari YAML lama
+    entrypoint: gcloud
     args:
       - 'run'
       - 'deploy'
-      - 'surat-backend-app' # Nama layanan Cloud Run yang baru
+      - 'surat-backend-app'
       - '--image'
       - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-backend-app:$COMMIT_SHA'
       - '--timeout'
-      - '1000s' # Timeout dari YAML lama Anda
+      - '1000s'
       - '--port'
-      - '3000' # Port yang sesuai untuk aplikasi Anda (bukan 5000)
+      - '3000'
       - '--region'
-      - 'us-central1' # Wilayah deployment Cloud Run Anda
-      - '--allow-unauthenticated' # Dari YAML lama Anda
-      - '--set-env-vars' # Menggunakan set-env-vars dan secretEnv untuk variabel
-      - | # Mengatur variabel lingkungan langsung (untuk yang tidak sensitif)
+      - 'us-central1'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - |
         NODE_ENV=production,
         PORT=3000,
-        GCS_BUCKET_NAME=c-01-450604, # Ini tetap ke proyek teman Anda
-        GCP_PROJECT_ID=c-01-450604,  # Ini tetap ke proyek teman Anda
-        GCP_CLIENT_EMAIL=storage-uploader-service@c-01-450604.iam.gserviceaccount.com # Ini tetap ke proyek teman Anda
+        GCS_BUCKET_NAME=c-01-450604,
+        GCP_PROJECT_ID=c-01-450604,
+        GCP_CLIENT_EMAIL=storage-uploader-service@c-01-450604.iam.gserviceaccount.com
     secretEnv: ['MYSQL_DATABASE_URL', 'POSTGRES_DATABASE_URL', 'JWT_SECRET', 'GCP_PRIVATE_KEY']
     id: 'Deploy to Cloud Run'
 
-# Bagian ini mendefinisikan secret yang tersedia dari Secret Manager
-# Secret-secret ini dibuat di proyek Anda (a-08-450504), jadi Project ID di sini harus ID proyek Anda.
 availableSecrets:
   secretManager:
     - versionName: projects/a-08-450504/secrets/MYSQL_DATABASE_URL_SECRET/versions/latest
