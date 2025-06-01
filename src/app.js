@@ -25,7 +25,7 @@ const PORT = process.env.PORT || 3000;
 const allowedOrigins = [
   'http://localhost:3001',
   'https://yourdomain.com',
-  'https://donasi-app-dot-c-01-450604.uc.r.appspot.com'
+  'https://deploy-surat-frontend-dot-a-08-450504.uc.r.appspot.com'
 ];
 
 const corsOptions = {
