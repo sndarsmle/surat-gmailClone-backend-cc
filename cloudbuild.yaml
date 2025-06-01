@@ -1,11 +1,9 @@
 # cloudbuild.yaml
-# Menggunakan opsi logging langsung ke Cloud Logging, yang mengatasi error logsBucket
 options:
-  logging: CLOUD_LOGGING_ONLY # Ini akan mengirim log build langsung ke Cloud Logging
+  logging: CLOUD_LOGGING_ONLY
 
 steps:
-  # Langkah 0 (BARU): Buat Repositori Artifact Registry jika belum ada
-  # Ini akan dijalankan sebelum push image
+  # Langkah 0: Buat Repositori Artifact Registry jika belum ada
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
@@ -18,50 +16,51 @@ steps:
           --description="Docker repository for Cloud Run source deployments" \
           --project=$PROJECT_ID
     id: 'Create Artifact Registry Repository'
-    # Perhatikan: $PROJECT_ID di sini akan otomatis diganti dengan ID proyek Anda
 
   # Step 1: Build the Docker image
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: "gcr.io/cloud-builders/docker"
     args:
-      - 'build'
-      - '-t'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-backend-app:$COMMIT_SHA'
-      - '.'
+      - "build"
+      - "-t"
+      - "us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-server-tcc:$COMMIT_SHA"
+      - "."
     dir: "."
-    id: 'Build Docker Image'
+    id: "Build Docker Image"
 
   # Step 2: Push the Docker image to Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
+  - name: "gcr.io/cloud-builders/docker"
     args:
-      - 'push'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-backend-app:$COMMIT_SHA'
-    id: 'Push Docker Image'
+      - "push"
+      - "us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-server-tcc:$COMMIT_SHA"
+    id: "Push Docker Image"
 
   # Step 3: Deploy to Cloud Run
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: gcloud
-    args:
-      - 'run'
-      - 'deploy'
-      - 'surat-backend-app'
-      - '--image'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-backend-app:$COMMIT_SHA'
-      - '--timeout'
-      - '1000s'
-      - '--port'
-      - '3000'
-      - '--region'
-      - 'us-central1'
-      - '--allow-unauthenticated'
-      - '--set-env-vars'
-      - |
+    args: # Array args dimulai di sini
+      - "run"
+      - "deploy"
+      - "surat-server-tcc" # Nama layanan Cloud Run Anda
+      - "--image"
+      - "us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-server-tcc:$COMMIT_SHA"
+      - "--timeout"
+      - "1000s"
+      - "--port"
+      - "3000"
+      - "--region"
+      - "us-central1"
+      - "--allow-unauthenticated"
+      - "--set-env-vars"
+      - | # Penting: Perhatikan indentasi untuk multi-line string
         NODE_ENV=production,
         PORT=3000,
         GCS_BUCKET_NAME=c-01-450604,
         GCP_PROJECT_ID=c-01-450604,
         GCP_CLIENT_EMAIL=storage-uploader-service@c-01-450604.iam.gserviceaccount.com
+    # secretEnv BUKAN bagian dari args. Ini adalah properti setara dengan 'args' dan 'id'.
+    # Perhatikan indentasinya yang sejajar dengan 'args' dan 'id'.
     secretEnv: ['MYSQL_DATABASE_URL', 'POSTGRES_DATABASE_URL', 'JWT_SECRET', 'GCP_PRIVATE_KEY']
-    id: 'Deploy to Cloud Run'
+    id: 'Deploy to Cloud Run' # id harus sejajar dengan args dan secretEnv
 
 availableSecrets:
   secretManager:
