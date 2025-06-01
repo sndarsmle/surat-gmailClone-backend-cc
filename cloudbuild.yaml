@@ -4,13 +4,11 @@ options:
 
 steps:
   # Langkah 0: Buat Repositori Artifact Registry jika belum ada
-  # MEMPERBAIKI PERINTAH DESCRIBE
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        # Perintah describe HANYA butuh nama repositori, BUKAN path lengkap
         gcloud artifacts repositories describe cloud-run-source-deploy --project=$PROJECT_ID --location=us-central1 || \
         gcloud artifacts repositories create cloud-run-source-deploy \
           --repository-format=docker \
@@ -53,9 +51,8 @@ steps:
       - "us-central1"
       - "--allow-unauthenticated"
       - "--set-env-vars"
-      - |
+      - | # Hapus PORT=3000 dari sini. Cloud Run akan mengaturnya secara otomatis.
         NODE_ENV=production,
-        PORT=3000,
         GCS_BUCKET_NAME=c-01-450604,
         GCP_PROJECT_ID=c-01-450604,
         GCP_CLIENT_EMAIL=storage-uploader-service@c-01-450604.iam.gserviceaccount.com
