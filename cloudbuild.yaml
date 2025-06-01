@@ -4,12 +4,14 @@ options:
 
 steps:
   # Langkah 0: Buat Repositori Artifact Registry jika belum ada
+  # MEMPERBAIKI PERINTAH DESCRIBE
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        gcloud artifacts repositories describe us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy --project=$PROJECT_ID --location=us-central1 || \
+        # Perintah describe HANYA butuh nama repositori, BUKAN path lengkap
+        gcloud artifacts repositories describe cloud-run-source-deploy --project=$PROJECT_ID --location=us-central1 || \
         gcloud artifacts repositories create cloud-run-source-deploy \
           --repository-format=docker \
           --location=us-central1 \
@@ -37,10 +39,10 @@ steps:
   # Step 3: Deploy to Cloud Run
   - name: "gcr.io/google.com/cloudsdktool/cloud-sdk"
     entrypoint: gcloud
-    args: # Array args dimulai di sini
+    args:
       - "run"
       - "deploy"
-      - "surat-server-tcc" # Nama layanan Cloud Run Anda
+      - "surat-server-tcc"
       - "--image"
       - "us-central1-docker.pkg.dev/$PROJECT_ID/cloud-run-source-deploy/surat-server-tcc:$COMMIT_SHA"
       - "--timeout"
@@ -51,16 +53,14 @@ steps:
       - "us-central1"
       - "--allow-unauthenticated"
       - "--set-env-vars"
-      - | # Penting: Perhatikan indentasi untuk multi-line string
+      - |
         NODE_ENV=production,
         PORT=3000,
         GCS_BUCKET_NAME=c-01-450604,
         GCP_PROJECT_ID=c-01-450604,
         GCP_CLIENT_EMAIL=storage-uploader-service@c-01-450604.iam.gserviceaccount.com
-    # secretEnv BUKAN bagian dari args. Ini adalah properti setara dengan 'args' dan 'id'.
-    # Perhatikan indentasinya yang sejajar dengan 'args' dan 'id'.
     secretEnv: ['MYSQL_DATABASE_URL', 'POSTGRES_DATABASE_URL', 'JWT_SECRET', 'GCP_PRIVATE_KEY']
-    id: 'Deploy to Cloud Run' # id harus sejajar dengan args dan secretEnv
+    id: 'Deploy to Cloud Run'
 
 availableSecrets:
   secretManager:
