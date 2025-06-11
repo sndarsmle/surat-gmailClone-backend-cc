@@ -32,7 +32,7 @@ steps:
         "us-central1", 
         "--allow-unauthenticated", 
         "--set-secrets", 
-        "JWT_SECRET=JWT_SECRET_KEY:latest,MYSQL_DATABASE_URL=MYSQL_DATABASE_URL_SECRET:latest,POSTGRES_DATABASE_URL=POSTGRES_DATABASE_URL_SECRET:latest,GCP_PRIVATE_KEY=GCP_PRIVATE_KEY_SECRET:latest",
+        "JWT_SECRET=JWT_SECRET_KEY:latest,MYSQL_DATABASE_URL=MYSQL_DATABASE_URL_SECRET_BARU:latest,POSTGRES_DATABASE_URL=POSTGRES_DATABASE_URL_SECRET:latest,GCP_PRIVATE_KEY=GCP_PRIVATE_KEY_SECRET:latest",
         "--set-env-vars", 
         "NODE_ENV=production,GCS_BUCKET_NAME=c-01-450604,GCP_PROJECT_ID=c-01-450604,GCP_CLIENT_EMAIL=storage-uploader-service@c-01-450604.iam.gserviceaccount.com" 
       ]
